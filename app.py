@@ -50,6 +50,7 @@ class Venue(db.Model):
     phone = db.Column(db.String(120), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    genres = db.Column("genres", db.ARRAY(db.String()), nullable=False)
     website = db.Column(db.String(250))
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(250))
@@ -108,6 +109,9 @@ def index():
 def venues():
     # TODO: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
+
+    venues = Venue.query.all()
+
     data = [{
         "city": "San Francisco",
         "state": "CA",
