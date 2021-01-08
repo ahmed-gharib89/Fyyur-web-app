@@ -14,6 +14,7 @@ from flask_wtf import Form
 from forms import *
 from flask_migrate import Migrate
 from datetime import datetime
+from sqlalchemy import func, sql
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -29,14 +30,16 @@ migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
-shows = db.Table('shows',
-                 db.Column('artist_id', db.Integer, db.ForeignKey(
-                     'Artist.id'), primary_key=True),
-                 db.Column('venue_id', db.Integer, db.ForeignKey(
-                     'Venue.id'), primary_key=True),
-                 db.Column('start_time', db.DateTime,
-                           nullable=False, default=datetime.utcnow)
-                 )
+
+
+class Shows(db.Model):
+    __tablename__ = 'shows'
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey(
+        'Artist.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False,
+                           default=datetime.utcnow)
 
 
 class Venue(db.Model):
@@ -54,8 +57,7 @@ class Venue(db.Model):
     website = db.Column(db.String(250))
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(250))
-    shows = db.relationship('Artist', secondary=shows,
-                            backref=db.backref('shows', lazy=True))
+    shows = db.relationship('Show', backref="venue", lazy=True)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -71,6 +73,7 @@ class Artist(db.Model):
     genres = db.Column(db.ARRAY(db.String()), nullable=False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    shows = db.relationship('Show', backref="artist", lazy=True)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -110,29 +113,42 @@ def venues():
     # TODO: replace with real venues data.
     #       num_shows should be aggregated based on number of upcoming shows per venue.
 
-    venues = Venue.query.all()
+    # Grapping each city state compination from venue table
+    city_states = db.session.query(
+        Venue.city,
+        Venue.state
+    ).group_by(Venue.city, Venue.state
+               ).all()
+    print(city_states)
 
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
+    # Subquery to get upcoming shows
+    # and dummy column to help count the number of shows for each venue
+    sub_query = db.session.query(
+        Shows.venue_id,
+        sql.expression.bindparam("one", 1)
+    ).filter(Shows.start_time > datetime.now()).subquery()
+
+    # Get venues data and number of shows
+    venues = db.session.query(
+        Venue.id,
+        Venue.name,
+        Venue.city,
+        Venue.state,
+        func.sum(sub_query.c.one).label('shows')
+    ).outerjoin(sub_query, sub_query.c.venue_id == Venue.id
+                ).group_by(Venue.id, Venue.name, Venue.city, Venue.state
+                           ).all()
+    print(venues)
+
+    data = [{"city": city,
+             "state": state,
+             "venues": [{
+                 "id": venue.id,
+                 "name": venue.name,
+                 "num_upcoming_shows": 0 if venue.shows is None else venue.shows
+             } for venue in venues if (venue.city == city and venue.state == state)]} for city, state in city_states]
+    print(data)
+
     return render_template('pages/venues.html', areas=data)
 
 
