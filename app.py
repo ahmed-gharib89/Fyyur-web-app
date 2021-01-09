@@ -290,7 +290,7 @@ def delete_venue(venue_id):
 
 @app.route('/artists')
 def artists():
-    # TODO: replace with real data returned from querying the database
+    # Done: replace with real data returned from querying the database
     artists = db.session.query(
         Artist.id,
         Artist.name
@@ -307,13 +307,32 @@ def search_artists():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
+    search_term = request.form.get('search_term', '')
+    # Subquery to get upcoming shows
+    # and dummy column to help count the number of shows for each venue
+    sub_query = db.session.query(
+        Shows.artist_id,
+        sql.expression.bindparam("one", 1)
+    ).filter(Shows.start_time > datetime.now()).subquery()
+
+    # Get venues data and number of shows
+    artists = db.session.query(
+        Artist.id,
+        Artist.name,
+        func.sum(sub_query.c.one).label('shows')
+    ).outerjoin(sub_query, sub_query.c.artist_id == Artist.id
+                ).group_by(Artist.id, Artist.name
+                           ).having(Artist.name.ilike(f'%{search_term}%')).all()
+    print(venues)
+    # venues = db.session.query(Venue).filter(Venue.name.ilike(f'%{search_term}%')).all()
+    # print(venues)
     response = {
-        "count": 1,
+        "count": len(artists),
         "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+            "id": artist.id,
+            "name": artist.name,
+            "num_upcoming_shows": 0 if artist.shows is None else artist.shows
+        } for artist in artists]
     }
     return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -321,7 +340,7 @@ def search_artists():
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
+    # Done: replace with real venue data from the venues table, using venue_id
     # Get the artist data by artist_id
     artist = Artist.query.get(artist_id)
     # Get the past shows for this venue
