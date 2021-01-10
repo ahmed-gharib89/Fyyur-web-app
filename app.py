@@ -264,14 +264,35 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
-
-    # on successful db insert, flash success
-    flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    try:
+        # Done: insert form data as a new Venue record in the db, instead
+        # Done: modify data to be the data object returned from db insertion
+        form = request.form
+        venue = Venue()
+        venue.name = form['name']
+        venue.city = form['city']
+        venue.state = form['state']
+        venue.address = form['address']
+        venue.phone = form['phone']
+        venue.image_link = None if form['image_link'] == '' else form['image_link']
+        venue.facebook_link = None if form['facebook_link'] == '' else form['facebook_link']
+        venue.genres = request.form.getlist('genres')
+        venue.website = None if form['website'] == '' else form['website']
+        venue.seeking_talent = True if request.form.get('seeking_talent', False) =='y' else False
+        venue.seeking_description = None if form['seeking_description'] == '' else form['seeking_description']
+        db.session.add(venue)
+        db.session.commit()
+        # on successful db insert, flash success
+        flash('Venue ' + form['name'] + ' was successfully listed!')
+    except():
+        db.session.rollback()
+        # Done: on unsuccessful db insert, flash an error instead.
+        # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        flash('An error occurred. Venue ' + form['name']+ ' could not be listed.')
+        print(sys.exc_info)
+    finally:
+        db.session.close()
     return render_template('pages/home.html')
 
 
@@ -304,7 +325,7 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
+    # Done: implement search on artists with partial string search. Ensure it is case-insensitive.
     # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
     search_term = request.form.get('search_term', '')
@@ -465,14 +486,34 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
-
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+    try:
+        # called upon submitting the new artist listing form
+        # Done: insert form data as a new Venue record in the db, instead
+        # Done: modify data to be the data object returned from db insertion
+        form = request.form
+        artist = Artist()
+        artist.name = form['name']
+        artist.city = form['city']
+        artist.state = form['state']
+        artist.phone = form['phone']
+        artist.image_link = None if form['image_link'] == '' else form['image_link']
+        artist.facebook_link = None if form['facebook_link'] == '' else form['facebook_link']
+        artist.genres = request.form.getlist('genres')
+        artist.website = None if form['website'] == '' else form['website']
+        artist.seeking_talent = True if request.form.get('seeking_talent', False) =='y' else False
+        artist.seeking_description = None if form['seeking_description'] == '' else form['seeking_description']
+        db.session.add(artist)
+        db.session.commit()
+        # on successful db insert, flash success
+        flash('artist ' + form['name'] + ' was successfully listed!')
+    except():
+        db.session.rollback()
+        # Done: on unsuccessful db insert, flash an error instead.
+        # e.g., flash('An error occurred. artist ' + data.name + ' could not be listed.')
+        flash('An error occurred. artist ' + form['name']+ ' could not be listed.')
+        print(sys.exc_info)
+    finally:
+        db.session.close()
     return render_template('pages/home.html')
 
 
