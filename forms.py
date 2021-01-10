@@ -164,7 +164,7 @@ class ArtistForm(FlaskForm):
     website = StringField(
         'website', validators=[URL()]
     )
-    seeking_talent = BooleanField(
+    seeking_venue = BooleanField(
         'seeking_talent'
     )
     seeking_description = StringField(

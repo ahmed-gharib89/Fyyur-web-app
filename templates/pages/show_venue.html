@@ -5,6 +5,7 @@
     <div class="col-sm-6">
         <h1 class="monospace">
             {{ venue.name }}
+            <a href="/venues/{{ venue.id }}/edit"><button id="edit-artist" class="btn btn-primary btn-sm">Edit</button></a>
             <a href="/"><button id="delete-venue" class="btn btn-danger btn-sm">Delete</button></a>
         </h1>
         <p class="subtitle">
