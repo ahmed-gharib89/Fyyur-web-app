@@ -4,7 +4,9 @@
 <div class="row">
 	<div class="col-sm-6">
 		<h1 class="monospace">
-			{{ artist.name }}
+            {{ artist.name }}
+            <a href="/artists/{{ artist.id }}/edit"><button id="edit-artist" class="btn btn-primary btn-sm">Edit</button></a>
+            <a href="/"><button id="delete-artist" class="btn btn-danger btn-sm">Delete</button></a>
 		</h1>
 		<p class="subtitle">
 			ID: {{ artist.id }}
@@ -71,6 +73,15 @@
 		{% endfor %}
 	</div>
 </section>
-
+<script>
+    const deleteBtn = document.getElementById('delete-artist');
+    deleteBtn.onclick = e => {
+        console.log("Delete event: ", e);
+        console.log("artist Id: ", "{{ artist.id }}");
+    fetch('/artist/{{ artist.id }}', {
+        method: 'DELETE'
+    })
+    }
+</script>
 {% endblock %}
 
