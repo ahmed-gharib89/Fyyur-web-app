@@ -2,6 +2,7 @@ from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, BooleanField
 from wtforms.validators import DataRequired, AnyOf, URL, Regexp, ValidationError
+import re
 
 
 GENERE_CHOICES = [
@@ -95,6 +96,12 @@ class ShowForm(FlaskForm):
     )
 
 class VenueForm(FlaskForm):
+    def validate_phone(self, phone):
+        us_phone_num = '^([0-9]{3})[-][0-9]{3}[-][0-9]{4}$'
+        match = re.search(us_phone_num, phone.data)
+        if not match:
+            raise ValidationError('Error, phone number must be in format xxx-xxx-xxxx')
+
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -109,13 +116,12 @@ class VenueForm(FlaskForm):
         'address', validators=[DataRequired()]
     )
     phone = StringField(
-        'phone', validators=[DataRequired(), Regexp(regex=r'^[0-9]+$', message='Phone number is incorrect')]
+        'phone', validators=[DataRequired(), validate_phone]
     )
     image_link = StringField(
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices= GENERE_CHOICES
     )
@@ -134,6 +140,12 @@ class VenueForm(FlaskForm):
     )
 
 class ArtistForm(FlaskForm):
+    def validate_phone(self, phone):
+        us_phone_num = '^([0-9]{3})[-][0-9]{3}[-][0-9]{4}$'
+        match = re.search(us_phone_num, phone.data)
+        if not match:
+            raise ValidationError('Error, phone number must be in format xxx-xxx-xxxx')
+
     name = StringField(
         'name', validators=[DataRequired()]
     )
@@ -145,20 +157,18 @@ class ArtistForm(FlaskForm):
         choices=STATE_CHOICES
     )
     phone = StringField(
-        # TODO implement validation logic for state
-        'phone', validators=[DataRequired()]
+        # Done implement validation logic for state
+        'phone', validators=[DataRequired(), validate_phone]
     )
     image_link = StringField(
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=GENERE_CHOICES
     )
     
     facebook_link = StringField(
-        # TODO implement enum restriction
         'facebook_link', validators=[URL()]
     )
     website = StringField(
@@ -172,4 +182,4 @@ class ArtistForm(FlaskForm):
 
     )
 
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+# Done IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
